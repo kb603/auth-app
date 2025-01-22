@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,6 +20,9 @@ export default function RegisterForm() {
       setError("All fields are required");
       return;
     }
+
+    setIsLoading(true);
+    setError("");
 
     try {
       const resUserExists = await fetch("/api/userExists", {
@@ -30,6 +37,7 @@ export default function RegisterForm() {
 
       if (user) {
         setError("User with this email already exists");
+        setIsLoading(false);
         return;
       }
 
@@ -43,7 +51,9 @@ export default function RegisterForm() {
 
       if (res.ok) {
         const form = e.target;
+        setIsLoading(false);
         form.reset();
+        router.push("/");
       } else {
         console.log("User registration failed");
       }
@@ -73,8 +83,12 @@ export default function RegisterForm() {
             type="password"
             placeholder="Password"
           />
-          <button className="bg-green-600 text-white font-bold cursor-pointer px-6 py-2 rounded-md">
-            Register
+          <button
+            className="bg-green-600 text-white font-bold cursor-pointer px-6 py-2 rounded-md disabled:bg-green-300"
+            type="submit"
+            disabled={isLoading} // Disable the button when loading
+          >
+            {isLoading ? "Loading..." : "Register"}
           </button>
 
           {error && (
